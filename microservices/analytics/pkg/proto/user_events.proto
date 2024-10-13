@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package userevents;
+
+option go_package = "./proto;userevents";
+
+import "google/protobuf/timestamp.proto";
+
+service UserEventService {
+    rpc SaveEvent (UserEvent) returns (SaveEventResponse);
+}
+
+message UserEvent {
+    string user_id = 1; // Идентификатор пользователя
+    string event_type = 2;  // Тип события
+    string user_agent = 3;  // Информация о браузере
+    string device_type = 4; // Тип устройства        
+    google.protobuf.Timestamp event_time = 5;  // Время события, которое передается с клиента
+}
+
+message SaveEventResponse {
+    string message = 1;
+}
