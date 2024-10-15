@@ -26,7 +26,9 @@ func UserEventsValidationMiddleware(next http.HandlerFunc) http.HandlerFunc {
             return
         }
 
-        validEventTypes := []string{"session_scrolled_1", "session_scrolled_2", "session_scrolled_3", "click", "comment", "download"}
+        validEventTypes := []string{"session_scrolled_1", "session_scrolled_2", "session_scrolled_3", 
+                                    "session_scrolled_4", "session_scrolled_5", "session_scrolled_6",
+                                    "session_scrolled_7", "session_scrolled_8", "visited" ,"click_try", "comment"}
         isValid := false
         for _, validType := range validEventTypes {
             if action.EventType == validType {
