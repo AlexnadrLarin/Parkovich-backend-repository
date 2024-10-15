@@ -1,0 +1,105 @@
+definitions:
+  api.UserAction:
+    properties:
+      device_type:
+        type: string
+      event_time:
+        type: string
+      event_type:
+        type: string
+      user_agent:
+        type: string
+      user_id:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/user-action:
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет действие пользователя в базе данных
+      parameters:
+      - description: Данные действия пользователя
+        in: body
+        name: action
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserAction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Действие сохранено
+          schema:
+            type: string
+        "400":
+          description: Неверные данные
+          schema:
+            type: string
+        "500":
+          description: Ошибка при сохранении данных
+          schema:
+            type: string
+      summary: Сохранение действия пользователя
+      tags:
+      - UserAction
+  /api/v1/user-actions:
+    get:
+      description: Предоставление информации о действиях всех пользователей из базы
+        данных
+      parameters:
+      - description: Данные действия пользователя
+        in: body
+        name: action
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserAction'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Ошибка при получении действий
+          schema:
+            type: string
+      summary: Предоставление информации о действиях всех пользователей
+      tags:
+      - UserAction
+  /api/v1/users-actions/{user_id}:
+    get:
+      description: Возвращает данные о конкретном пользователе по его уникальному
+        идентификатору (user_id)
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Данные о пользователе
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос, не указан user_id
+          schema:
+            type: string
+        "404":
+          description: Пользователь с таким ID не найден
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Получить данные о пользователе
+      tags:
+      - UserAction
+swagger: "2.0"

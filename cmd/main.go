@@ -8,7 +8,8 @@ import (
 
 	"go-parkovich/microservices/analytics/cmd"
 	"go-parkovich/microservices/analytics/pkg/proto"
-
+	"go-parkovich/internal"
+	_ "go-parkovich/docs"  
 )
 
 func main() {
@@ -28,6 +29,8 @@ func main() {
 	grpcClient := userevents.NewUserEventServiceClient(conn)
 
 	_ = grpcClient
+
+	internal.SetupRouter()
 
 	log.Println("Главный сервер запущен на порту :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
