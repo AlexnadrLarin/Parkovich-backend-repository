@@ -18,7 +18,7 @@ func SetupRouter(repo *database.UserEventsRepository) *mux.Router {
 
     r.HandleFunc("/api/v1/user-actions/{user_id}", api.GetUserActions(repo)).Methods(http.MethodGet)
 
-    r.HandleFunc("/api/v1/action-counts", api.GetActionCounts(repo)).Methods(http.MethodGet)
+    r.HandleFunc("/api/v1/action-and-device-counts", api.GetActionAndDeviceCounts(repo)).Methods(http.MethodGet)
 
 
     return r

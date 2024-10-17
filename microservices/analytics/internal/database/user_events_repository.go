@@ -119,26 +119,39 @@ func (repo *UserEventsRepository) GetUserActionsByID(userID string) ([]UserActio
     return actions, nil
 }
 
-func (repo *UserEventsRepository) GetActionCountsByType() (map[string]uint64, error) {
-    query := `SELECT event_type, COUNT(*) FROM user_events GROUP BY event_type`
+func (repo *UserEventsRepository) GetActionCountsByType() (map[string]uint64, map[string]uint64, map[string]uint64, error) {
+    query := `SELECT event_type, user_agent, device_type, COUNT(*) 
+              FROM user_events 
+              GROUP BY event_type, user_agent, device_type`
+    
     rows, err := repo.db.Query(context.Background(), query)
     if err != nil {
-        return nil, err
+        return nil, nil, nil, err
     }
     defer rows.Close()
 
     actionCounts := make(map[string]uint64)
+    userAgentCounts := make(map[string]uint64)
+    deviceTypeCounts := make(map[string]uint64)
+
     for rows.Next() {
-        var eventType string
+        var eventType, userAgent, deviceType string
         var count uint64
-        if err := rows.Scan(&eventType, &count); err != nil {
-            return nil, err
+
+        if err := rows.Scan(&eventType, &userAgent, &deviceType, &count); err != nil {
+            return nil, nil, nil, err
         }
-        actionCounts[eventType] = count
+
+        actionCounts[eventType] += count
+
+        userAgentCounts[userAgent] += count
+
+        deviceTypeCounts[deviceType] += count
     }
 
-    return actionCounts, nil
+    return actionCounts, userAgentCounts, deviceTypeCounts, nil
 }
+
 
 func (repo *UserEventsRepository) Close() {
     repo.db.Close()

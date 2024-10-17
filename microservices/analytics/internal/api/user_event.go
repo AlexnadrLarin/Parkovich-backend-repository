@@ -130,27 +130,33 @@ func GetUserActions(repo *database.UserEventsRepository) http.HandlerFunc {
     }
 }
 
-// GetActionCountsHandler возвращает количество действий для каждого типа действия пользователя
-// @Summary Получить количество действий по типам
-// @Description Возвращает количество действий, сгруппированных по типу действия (event_type)
-// @Tags UserAction
+
+// GetActionAndDeviceCountsHandler возвращает количество действий по типам, браузерам и устройствам
+// @Summary Получить количество действий по типам, браузерам и устройствам
+// @Description Возвращает количество действий, сгруппированных по типу действия, браузеру и типу устройства
+// @Tags User Actions
 // @Produce json
-// @Success 200 {object} map[string]uint64 "Количество действий по типам"
+// @Success 200 {object} map[string]interface{} "Количество действий по типам, браузерам и устройствам"
 // @Failure 500 {string} string "Ошибка при получении данных"
-// @Router /api/v1/action-counts [get]
-func GetActionCounts(repo *database.UserEventsRepository) http.HandlerFunc {
+// @Router /api/v1/action-and-device-counts [get]
+func GetActionAndDeviceCounts(repo *database.UserEventsRepository) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
-        actionCounts, err := repo.GetActionCountsByType()
+        actionCounts, userAgentCounts, deviceTypeCounts, err := repo.GetActionCountsByType()
         if err != nil {
-            log.Printf("Ошибка при подсчете действий по типам: %v", err)
+            log.Printf("Ошибка при подсчете действий, браузеров и устройств: %v", err)
             respondWithJSON(w, http.StatusInternalServerError, "Ошибка при получении данных")
             return
         }
 
-        respondWithJSON(w, http.StatusOK, actionCounts)
+        result := map[string]interface{}{
+            "action_counts":     actionCounts,
+            "user_agent_counts": userAgentCounts,
+            "device_type_counts": deviceTypeCounts,
+        }
+
+        respondWithJSON(w, http.StatusOK, result)
     }
 }
-
 func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(statusCode)
