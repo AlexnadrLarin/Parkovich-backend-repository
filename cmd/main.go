@@ -5,10 +5,12 @@ import (
 	"net/http"
 
 	"google.golang.org/grpc"
+	"github.com/gorilla/handlers"
 
 	"go-parkovich/microservices/analytics/cmd"
 	"go-parkovich/microservices/analytics/pkg/proto"
 	"go-parkovich/internal"
+	"go-parkovich/internal/database"
 	_ "go-parkovich/docs"  
 )
 
@@ -18,6 +20,12 @@ func main() {
 			log.Fatalf("Ошибка при запуске микросервиса: %v", err)
 		}
 	}()
+
+	repo, err := database.NewUserMessagesRepository()
+    if err != nil {
+        log.Printf("Ошибка подключения к Postgres: %v", err)
+    }
+    defer repo.Close() 
 
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure()) 
 	if err != nil {
@@ -30,10 +38,16 @@ func main() {
 
 	_ = grpcClient
 
-	internal.SetupRouter()
+	router := internal.SetupRouter(repo)
+
+	corsHandler := handlers.CORS(
+        handlers.AllowedOrigins([]string{"*"}),     
+        handlers.AllowedMethods([]string{"OPTIONS", "GET", "POST", "PUT", "DELETE"}), 
+        handlers.AllowedHeaders([]string{"Content-Type", "Authorization", "application/json"}), 
+    )(router)
 
 	log.Println("Главный сервер запущен на порту :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", corsHandler); err != nil {
 		log.Fatalf("Ошибка запуска главного сервера: %v", err)
 	}
 }
