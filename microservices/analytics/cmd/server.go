@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"google.golang.org/grpc"
+	"github.com/gorilla/handlers"
 
 	"go-parkovich/microservices/analytics/internal"
 	"go-parkovich/microservices/analytics/internal/api"
@@ -35,9 +36,15 @@ func Start() error {
 
 	router := internal.SetupRouter(repo)
 
+	corsHandler := handlers.CORS(
+        handlers.AllowedOrigins([]string{"*"}),     
+        handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}), 
+        handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}), 
+    )(router)
+
 	go func() {
 		log.Println("HTTP сервер микросервиса запущен на порту :8081")
-		if err := http.ListenAndServe(":8081", router); err != nil {
+		if err := http.ListenAndServe(":8081", corsHandler); err != nil {
 			log.Printf("Ошибка при запуске HTTP сервера: %v", err)
 		}
 	}()
