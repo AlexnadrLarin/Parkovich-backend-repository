@@ -15,6 +15,146 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/action-and-device-counts": {
+            "get": {
+                "description": "Возвращает количество действий, сгруппированных по типу действия, браузеру и типу устройства",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Actions"
+                ],
+                "summary": "Получить количество действий по типам, браузерам и устройствам",
+                "responses": {
+                    "200": {
+                        "description": "Количество действий по типам, браузерам и устройствам",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении данных",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/email-subscribe": {
+            "post": {
+                "description": "Сохраняет email подписчика с валидацией",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Subscribers"
+                ],
+                "summary": "Сохранение email подписчика",
+                "parameters": [
+                    {
+                        "description": "Данные email пользователя",
+                        "name": "subcriber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.EmailSubscriber"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Подписчик успешно сохранён",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/email-subscribers": {
+            "get": {
+                "description": "Возвращает всех подписчиков из таблицы email_subscribers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Subscribers"
+                ],
+                "summary": "Получить всех подписчиков",
+                "responses": {
+                    "200": {
+                        "description": "Все подписчики",
+                        "schema": {
+                            "type": "array"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении подписчиков",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/email-subscribers/{id}": {
+            "get": {
+                "description": "Возвращает конкретного подписчика по его ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Email Subscribers"
+                ],
+                "summary": "Получить подписчика по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Подписчик",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Подписчик не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/user-action": {
             "post": {
                 "description": "Сохраняет действие пользователя в базе данных",
@@ -98,6 +238,119 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user-message": {
+            "post": {
+                "description": "Сохраняет сообщение пользователя с валидацией имени, email и сообщения",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Messages"
+                ],
+                "summary": "Сохранение сообщения пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные сообшения пользователя",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.UserMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Сообщение успешно сохранено",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user-messages": {
+            "get": {
+                "description": "Возвращает все сообщения из таблицы сообщений пользователей",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Messages"
+                ],
+                "summary": "Получить все сообщения пользователей",
+                "responses": {
+                    "200": {
+                        "description": "Все сообщения пользователей",
+                        "schema": {
+                            "type": "array"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при получении сообщений",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user-messages/{id}": {
+            "get": {
+                "description": "Возвращает конкретное сообщение пользователя по его ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User Messages"
+                ],
+                "summary": "Получить сообщение пользователя по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Сообщение пользователя",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Сообщение не найдено",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users-actions/{user_id}": {
             "get": {
                 "description": "Возвращает данные о конкретном пользователе по его уникальному идентификатору (user_id)",
@@ -147,6 +400,14 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "api.EmailSubscriber": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "api.UserAction": {
             "type": "object",
             "properties": {
@@ -163,6 +424,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UserMessage": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

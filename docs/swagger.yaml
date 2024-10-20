@@ -1,4 +1,9 @@
 definitions:
+  api.EmailSubscriber:
+    properties:
+      email:
+        type: string
+    type: object
   api.UserAction:
     properties:
       device_type:
@@ -12,9 +17,111 @@ definitions:
       user_id:
         type: string
     type: object
+  api.UserMessage:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /api/v1/action-and-device-counts:
+    get:
+      description: Возвращает количество действий, сгруппированных по типу действия,
+        браузеру и типу устройства
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Количество действий по типам, браузерам и устройствам
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Ошибка при получении данных
+          schema:
+            type: string
+      summary: Получить количество действий по типам, браузерам и устройствам
+      tags:
+      - User Actions
+  /api/v1/email-subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет email подписчика с валидацией
+      parameters:
+      - description: Данные email пользователя
+        in: body
+        name: subcriber
+        required: true
+        schema:
+          $ref: '#/definitions/api.EmailSubscriber'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Подписчик успешно сохранён
+          schema:
+            type: string
+        "400":
+          description: Некорректные данные
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Сохранение email подписчика
+      tags:
+      - Email Subscribers
+  /api/v1/email-subscribers:
+    get:
+      description: Возвращает всех подписчиков из таблицы email_subscribers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Все подписчики
+          schema:
+            type: array
+        "500":
+          description: Ошибка при получении подписчиков
+          schema:
+            type: string
+      summary: Получить всех подписчиков
+      tags:
+      - Email Subscribers
+  /api/v1/email-subscribers/{id}:
+    get:
+      description: Возвращает конкретного подписчика по его ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Подписчик
+          schema:
+            type: string
+        "400":
+          description: Неверный запрос
+          schema:
+            type: string
+        "404":
+          description: Подписчик не найден
+          schema:
+            type: string
+      summary: Получить подписчика по ID
+      tags:
+      - Email Subscribers
   /api/v1/user-action:
     post:
       consumes:
@@ -70,6 +177,80 @@ paths:
       summary: Предоставление информации о действиях всех пользователей
       tags:
       - UserAction
+  /api/v1/user-message:
+    post:
+      consumes:
+      - application/json
+      description: Сохраняет сообщение пользователя с валидацией имени, email и сообщения
+      parameters:
+      - description: Данные сообшения пользователя
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserMessage'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сообщение успешно сохранено
+          schema:
+            type: string
+        "400":
+          description: Некорректные данные
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Сохранение сообщения пользователя
+      tags:
+      - User Messages
+  /api/v1/user-messages:
+    get:
+      description: Возвращает все сообщения из таблицы сообщений пользователей
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Все сообщения пользователей
+          schema:
+            type: array
+        "500":
+          description: Ошибка при получении сообщений
+          schema:
+            type: string
+      summary: Получить все сообщения пользователей
+      tags:
+      - User Messages
+  /api/v1/user-messages/{id}:
+    get:
+      description: Возвращает конкретное сообщение пользователя по его ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сообщение пользователя
+          schema:
+            type: string
+        "400":
+          description: Неверный запрос
+          schema:
+            type: string
+        "404":
+          description: Сообщение не найдено
+          schema:
+            type: string
+      summary: Получить сообщение пользователя по ID
+      tags:
+      - User Messages
   /api/v1/users-actions/{user_id}:
     get:
       description: Возвращает данные о конкретном пользователе по его уникальному
