@@ -3,6 +3,8 @@ package middleware
 import (
     "encoding/json"
     "net/http"
+    "io"
+	"bytes"
 )
 
 type UserAction struct {
@@ -15,8 +17,16 @@ type UserAction struct {
 func UserEventsValidationMiddleware(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var action UserAction
+
+        body, err := io.ReadAll(r.Body)
+        if err != nil {
+            http.Error(w, "Ошибка при чтении данных", http.StatusInternalServerError)
+            return
+        }
+
+        r.Body = io.NopCloser(bytes.NewBuffer(body))
         
-        if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
+        if err := json.Unmarshal(body, &action);  err != nil {
             http.Error(w, "Неверные данные", http.StatusBadRequest)
             return
         }
