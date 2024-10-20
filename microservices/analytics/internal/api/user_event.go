@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"time"
+    "io"
+    "bytes"
+    "fmt"
 
 	"go-parkovich/microservices/analytics/internal/database"
 	"go-parkovich/microservices/analytics/pkg/proto"
@@ -46,7 +49,16 @@ type UserAction struct {
 func HandleUserAction(repo *database.UserEventsRepository) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         var action UserAction
-        if err := json.NewDecoder(r.Body).Decode(&action); err != nil {
+        
+        body, err := io.ReadAll(r.Body)
+        if err != nil {
+            http.Error(w, "Ошибка при чтении данных", http.StatusInternalServerError)
+            return
+        }
+
+        r.Body = io.NopCloser(bytes.NewBuffer(body))
+
+        if err := json.Unmarshal(body, &action);  err != nil {
             respondWithJSON(w, http.StatusBadRequest, "Неверные данные")
             return
         }
@@ -67,7 +79,8 @@ func HandleUserAction(repo *database.UserEventsRepository) http.HandlerFunc {
             respondWithJSON(w, http.StatusInternalServerError, "Ошибка при сохранении данных")
             return
         }
-
+        
+        log.Println("Действие сохранено")
         respondWithJSON(w, http.StatusOK, "Действие сохранено")
     }
 }
@@ -130,7 +143,6 @@ func GetUserActions(repo *database.UserEventsRepository) http.HandlerFunc {
     }
 }
 
-
 // GetActionAndDeviceCountsHandler возвращает количество действий по типам, браузерам и устройствам
 // @Summary Получить количество действий по типам, браузерам и устройствам
 // @Description Возвращает количество действий, сгруппированных по типу действия, браузеру и типу устройства
@@ -148,15 +160,41 @@ func GetActionAndDeviceCounts(repo *database.UserEventsRepository) http.HandlerF
             return
         }
 
+        visitors := 0
+        actionTry := 0
+        actionMessage := 0
+        sections := make([]int, 8) 
+
+        for eventType, count := range actionCounts {
+            switch eventType {
+            case "visited":
+                visitors = int(count)
+            case "click_try":
+                actionTry = int(count)
+            case "comment":
+                actionMessage = int(count)
+            default:
+                for i := 1; i <= 8; i++ {
+                    if eventType == fmt.Sprintf("session_scrolled_%d", i) {
+                        sections[i-1] = int(count)
+                    }
+                }
+            }
+        }
+
         result := map[string]interface{}{
-            "action_counts":     actionCounts,
-            "user_agent_counts": userAgentCounts,
-            "device_type_counts": deviceTypeCounts,
+            "visitors":       visitors,
+            "devices":        deviceTypeCounts,  
+            "browsers":       userAgentCounts,  
+            "action_try":     actionTry,
+            "action_message": actionMessage,
+            "sections":       sections,
         }
 
         respondWithJSON(w, http.StatusOK, result)
     }
 }
+
 func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(statusCode)
