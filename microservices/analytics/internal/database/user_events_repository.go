@@ -120,10 +120,11 @@ func (repo *UserEventsRepository) GetUserActionsByID(userID string) ([]UserActio
 }
 
 func (repo *UserEventsRepository) GetActionCountsByType() (map[string]uint64, map[string]uint64, map[string]uint64, error) {
-    query := `SELECT event_type, user_agent, device_type, COUNT(*) 
-              FROM user_events 
-              GROUP BY event_type, user_agent, device_type`
-    
+    query := `
+        SELECT event_type, user_agent, device_type, COUNT(*) 
+        FROM user_events 
+        GROUP BY event_type, user_agent, device_type
+    `
     rows, err := repo.db.Query(context.Background(), query)
     if err != nil {
         return nil, nil, nil, err
@@ -137,7 +138,6 @@ func (repo *UserEventsRepository) GetActionCountsByType() (map[string]uint64, ma
     for rows.Next() {
         var eventType, userAgent, deviceType string
         var count uint64
-
         if err := rows.Scan(&eventType, &userAgent, &deviceType, &count); err != nil {
             return nil, nil, nil, err
         }
