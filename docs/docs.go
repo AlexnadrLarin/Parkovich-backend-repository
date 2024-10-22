@@ -79,6 +79,12 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "409": {
+                        "description": "Подписчик уже существует в базе данных",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     "500": {
                         "description": "Ошибка сервера",
                         "schema": {

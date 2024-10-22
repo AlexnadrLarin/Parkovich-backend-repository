@@ -5,6 +5,7 @@ import (
     "log"
     "os"
     "time"
+    "fmt"
 
     "github.com/jackc/pgx/v4"
     "github.com/joho/godotenv"
@@ -62,6 +63,18 @@ func (repo *UserMessagesRepository) SaveUserMessage(name, email, message string)
         return err
     }
 
+    queryCheck := `SELECT COUNT(*) FROM email_subscribers WHERE email = $1`
+    var count int
+    err = tx.QueryRow(context.Background(), queryCheck, email).Scan(&count)
+    if err != nil {
+        log.Printf("Ошибка при проверке существующего email: %v", err)
+        return err
+    }
+
+    if count > 0 {
+        return nil
+    }
+
     queryInsertSubscriber := `INSERT INTO email_subscribers (email, subscribed_at) 
                               VALUES ($1, $2) 
                               ON CONFLICT (email) DO NOTHING`
@@ -87,6 +100,18 @@ func (repo *UserMessagesRepository) SaveEmailSubscriber(email string) error {
         }
     }()
     
+    queryCheck := `SELECT COUNT(*) FROM email_subscribers WHERE email = $1`
+    var count int
+    err = tx.QueryRow(context.Background(), queryCheck, email).Scan(&count)
+    if err != nil {
+        log.Printf("Ошибка при проверке существующего email: %v", err)
+        return err
+    }
+
+    if count > 0 {
+        return fmt.Errorf("Подписчик уже есть в базе данных")
+    }
+
     queryInsert := `INSERT INTO email_subscribers (email, subscribed_at) 
                     VALUES ($1, $2) 
                     ON CONFLICT (email) DO NOTHING`

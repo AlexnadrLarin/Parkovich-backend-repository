@@ -81,6 +81,7 @@ func SaveUserMessage(repo *database.UserMessagesRepository) http.HandlerFunc {
 // @Param subcriber body EmailSubscriber true "Данные email пользователя"
 // @Success 200 {string} string "Подписчик успешно сохранён"
 // @Failure 400 {string} string "Некорректные данные"
+// @Failure 409 {string} string "Подписчик уже существует в базе данных"
 // @Failure 500 {string} string "Ошибка сервера"
 // @Router /api/v1/email-subscribe [post]
 func SaveEmailSubscriber(repo *database.UserMessagesRepository) http.HandlerFunc {
@@ -102,8 +103,15 @@ func SaveEmailSubscriber(repo *database.UserMessagesRepository) http.HandlerFunc
 
         err = repo.SaveEmailSubscriber(subscriber.Email)
         if err != nil {
+            if err.Error() == "Подписчик уже есть в базе данных" {
+                respondWithJSON(w, http.StatusConflict, map[string]string{
+                    "error": "Подписчик уже есть в базе данных",
+                })
+                return
+            }
+
             log.Printf("Ошибка при сохранении подписчика: %v", err)
-            http.Error(w, "Ошибка при сохранении подписчика", http.StatusInternalServerError)
+            http.Error(w, "Ошибка при сохранении подписчика: %v", http.StatusInternalServerError)
             return
         }
 
