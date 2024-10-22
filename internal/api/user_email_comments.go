@@ -39,7 +39,7 @@ func SaveUserMessage(repo *database.UserMessagesRepository) http.HandlerFunc {
 		
 		body, err := io.ReadAll(r.Body)
         if err != nil {
-            http.Error(w, "Ошибка при чтении данных", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при чтении данных"))
             return
         }
 
@@ -48,27 +48,26 @@ func SaveUserMessage(repo *database.UserMessagesRepository) http.HandlerFunc {
 
         if err := json.Unmarshal(body, &message); err != nil {
 			log.Printf("%v", err)
-            http.Error(w, "Неверные данные", http.StatusBadRequest)
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Неверные данные"))
             return
         }
 
         err = repo.SaveUserMessage(message.Name, message.Email, message.Message)
         if err != nil {
             log.Printf("Ошибка при сохранении сообщения: %v", err)
-            http.Error(w, "Ошибка при сохранении сообщения", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при сохранении сообщения"))
             return
         }
 
         err = repo.SaveEmailSubscriber(message.Email)
         if err != nil {
             log.Printf("Ошибка при сохранении подписчика: %v", err)
-            http.Error(w, "Ошибка при сохранении подписчика", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при сохранении подписчика"))
             return
         }
 
         log.Println("Сообщение и подписка успешно сохранены")
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte("Сообщение и подписка успешно сохранены"))
+        respondWithJSON(w, http.StatusOK, SuccessMessage("Сообщение и подписка успешно сохранены"))
     }
 }
 
@@ -90,34 +89,31 @@ func SaveEmailSubscriber(repo *database.UserMessagesRepository) http.HandlerFunc
 
 		body, err := io.ReadAll(r.Body)
         if err != nil {
-            http.Error(w, "Ошибка при чтении данных", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при чтении данных"))
             return
         }
 
         r.Body = io.NopCloser(bytes.NewBuffer(body))
 
         if err := json.Unmarshal(body, &subscriber); err != nil {
-            http.Error(w, "Неверные данные", http.StatusBadRequest)
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Неверные данные"))
             return
         }
 
         err = repo.SaveEmailSubscriber(subscriber.Email)
         if err != nil {
             if err.Error() == "Подписчик уже есть в базе данных" {
-                respondWithJSON(w, http.StatusConflict, map[string]string{
-                    "error": "Подписчик уже есть в базе данных",
-                })
+                respondWithJSON(w, http.StatusConflict, ErrorMessage("Подписчик уже есть в базе данных"))
                 return
             }
 
             log.Printf("Ошибка при сохранении подписчика: %v", err)
-            http.Error(w, "Ошибка при сохранении подписчика: %v", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при сохранении подписчика"))
             return
         }
 
         log.Println("Подписчик успешно сохранен")
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte("Подписчик успешно сохранен"))
+        respondWithJSON(w, http.StatusOK, SuccessMessage("Подписчик успешно сохранен"))
     }
 }
 
@@ -134,7 +130,7 @@ func GetAllUserMessages(repo *database.UserMessagesRepository) http.HandlerFunc 
         messages, err := repo.GetUserMessages()
         if err != nil {
             log.Printf("Ошибка при получении сообщений пользователей: %v", err)
-            http.Error(w, "Ошибка при получении данных", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при получении сообщений пользователей"))
             return
         }
         respondWithJSON(w, http.StatusOK, messages)
@@ -157,13 +153,14 @@ func GetUserMessageByID(repo *database.UserMessagesRepository) http.HandlerFunc 
         id, err := strconv.Atoi(idStr)
         if err != nil || id <= 0 {
             http.Error(w, "Некорректный ID", http.StatusBadRequest)
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Некорректный ID"))
             return
         }
 
         message, err := repo.GetUserMessageByID(id)
         if err != nil {
             log.Printf("Сообщение не найдено: %v", err)
-            http.Error(w, "Сообщение не найдено", http.StatusNotFound)
+            respondWithJSON(w, http.StatusNotFound, ErrorMessage("Сообщение не найдено"))
             return
         }
         respondWithJSON(w, http.StatusOK, message)
@@ -183,7 +180,7 @@ func GetAllEmailSubscribers(repo *database.UserMessagesRepository) http.HandlerF
         subscribers, err := repo.GetEmailSubscribers()
         if err != nil {
             log.Printf("Ошибка при получении подписчиков: %v", err)
-            http.Error(w, "Ошибка при получении данных", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при получении данных"))
             return
         }
         respondWithJSON(w, http.StatusOK, subscribers)
@@ -205,22 +202,32 @@ func GetEmailSubscriberByID(repo *database.UserMessagesRepository) http.HandlerF
         idStr := r.URL.Query().Get("id")
         id, err := strconv.Atoi(idStr)
         if err != nil || id <= 0 {
-            http.Error(w, "Некорректный ID", http.StatusBadRequest)
+            log.Printf("Некорректный ID: %v", err)
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Некорректный ID"))
             return
         }
 
         subscriber, err := repo.GetEmailSubscriberByID(id)
         if err != nil {
             log.Printf("Подписчик не найден: %v", err)
-            http.Error(w, "Подписчик не найден", http.StatusNotFound)
+            respondWithJSON(w, http.StatusNotFound, ErrorMessage("Подписчик не найден"))
             return
         }
         respondWithJSON(w, http.StatusOK, subscriber)
     }
 }
 
-func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+func ErrorMessage(message string) map[string]string {
+    return map[string]string{"error": message}
+}
+
+func SuccessMessage(message string) map[string]string {
+    return map[string]string{"message": message}
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int,  data interface{}) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(statusCode)
+
     json.NewEncoder(w).Encode(data)
 }

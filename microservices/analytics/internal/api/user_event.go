@@ -52,14 +52,14 @@ func HandleUserAction(repo *database.UserEventsRepository) http.HandlerFunc {
         
         body, err := io.ReadAll(r.Body)
         if err != nil {
-            http.Error(w, "Ошибка при чтении данных", http.StatusInternalServerError)
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при чтении данных"))
             return
         }
 
         r.Body = io.NopCloser(bytes.NewBuffer(body))
 
         if err := json.Unmarshal(body, &action);  err != nil {
-            respondWithJSON(w, http.StatusBadRequest, "Неверные данные")
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Неверные данные"))
             return
         }
 
@@ -76,12 +76,12 @@ func HandleUserAction(repo *database.UserEventsRepository) http.HandlerFunc {
 
         if err := repo.SaveOrUpdateUserAction(dbAction); err != nil {
             log.Printf("Ошибка при сохранении действия: %v", err)
-            respondWithJSON(w, http.StatusInternalServerError, "Ошибка при сохранении данных")
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при сохранении данных"))
             return
         }
         
         log.Println("Действие сохранено")
-        respondWithJSON(w, http.StatusOK, "Действие сохранено")
+        respondWithJSON(w, http.StatusOK, SuccessMessage("Действие сохранено"))
     }
 }
 
@@ -99,7 +99,7 @@ func GetAllUserActions(repo *database.UserEventsRepository) http.HandlerFunc {
         actions, err := repo.GetAllUserActions()
         if err != nil {
             log.Printf("Ошибка при получении действий: %v", err)
-            respondWithJSON(w, http.StatusInternalServerError, "Ошибка при получении данных")
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при получении данных"))
             return
         }
 
@@ -122,20 +122,20 @@ func GetUserActions(repo *database.UserEventsRepository) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         userIDStr := r.URL.Query().Get("user_id")
         if userIDStr == "" {
-            respondWithJSON(w, http.StatusBadRequest, "Необходимо указать user_id")
+            respondWithJSON(w, http.StatusBadRequest, ErrorMessage("Необходимо указать user_id"))
             return
         }
 
         actions, err := repo.GetUserActionsByID(userIDStr)
         if err != nil {
             log.Printf("Ошибка при получении действий: %v", err)
-            respondWithJSON(w, http.StatusInternalServerError, "Ошибка при получении данных")
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при получении данных"))
             return
         }
 
         if len(actions) == 0 {
             log.Printf("Пользователь с таким ID не найден")
-            respondWithJSON(w, http.StatusNotFound, "Пользователь не найден")
+            respondWithJSON(w, http.StatusNotFound, ErrorMessage("Пользователь не найден"))
             return
         }
 
@@ -156,7 +156,7 @@ func GetActionAndDeviceCounts(repo *database.UserEventsRepository) http.HandlerF
         actionCounts, userAgentCounts, deviceTypeCounts, err := repo.GetActionCountsByType()
         if err != nil {
             log.Printf("Ошибка при подсчете действий, браузеров и устройств: %v", err)
-            respondWithJSON(w, http.StatusInternalServerError, "Ошибка при получении данных")
+            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при получении данных"))
             return
         }
 
@@ -195,8 +195,17 @@ func GetActionAndDeviceCounts(repo *database.UserEventsRepository) http.HandlerF
     }
 }
 
-func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+func ErrorMessage(message string) map[string]string {
+    return map[string]string{"error": message}
+}
+
+func SuccessMessage(message string) map[string]string {
+    return map[string]string{"message": message}
+}
+
+func respondWithJSON(w http.ResponseWriter, statusCode int,  data interface{}) {
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(statusCode)
+
     json.NewEncoder(w).Encode(data)
 }
