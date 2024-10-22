@@ -59,13 +59,6 @@ func SaveUserMessage(repo *database.UserMessagesRepository) http.HandlerFunc {
             return
         }
 
-        err = repo.SaveEmailSubscriber(message.Email)
-        if err != nil {
-            log.Printf("Ошибка при сохранении подписчика: %v", err)
-            respondWithJSON(w, http.StatusInternalServerError, ErrorMessage("Ошибка при сохранении подписчика"))
-            return
-        }
-
         log.Println("Сообщение и подписка успешно сохранены")
         respondWithJSON(w, http.StatusOK, SuccessMessage("Сообщение и подписка успешно сохранены"))
     }
